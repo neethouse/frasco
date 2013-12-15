@@ -3,17 +3,11 @@ module Frasco
 
   class Snapshot
 
-    attr_reader :ios_ver, :name, :path
+    attr_reader :name, :path
 
-    def initialize(root_dir, ios_ver, name, escaped=false)
-      @ios_ver = ios_ver
-      @name = escaped ? self.class.unescape_name(name) : name
-
-      @path = "#{root_dir}/#{@ios_ver}/#{escaped_name}"
-    end
-
-    def to_s
-      '%6s/%s' % [@ios_ver, @name]
+    def initialize(root_dir, name)
+      @name = name
+      @path = "#{root_dir}/#{escaped_name}"
     end
 
     def escaped_name
@@ -22,6 +16,11 @@ module Frasco
 
     def exists?
       File.exists?(@path)
+    end
+
+
+    def find_versions
+      Dir.glob("#{path}/*").map {|path| File.basename(path) }.sort
     end
 
 

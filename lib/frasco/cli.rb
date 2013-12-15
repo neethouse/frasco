@@ -2,7 +2,6 @@ require "Find"
 require "thor"
 require "frasco/error"
 require "frasco/snapshot"
-require "frasco/simulator"
 
 module Frasco
 
@@ -12,123 +11,109 @@ module Frasco
 
     def initialize(*args)
       super(*args)
+
+      @simulator_dir = File.expand_path("~/Library/Application Support/iPhone Simulator");
     end
 
 
     desc "init", "Create '.frasco' directory in current location"
     def init
+
+      raise FrascoError.new("already initialized") \
+        if File.exists?(".frasco")
+
       FileUtils.mkdir(".frasco")
     end
 
 
-    desc "versions", "Show exists simulator environment versions"
-    def versions
+    desc "list", "Show saved snapshots"
+    def list
 
-      pattern = "#{_find_simulators_dir}/*"
-
-      Dir.glob(pattern).sort.map do |path|
-        puts File.basename(path)
-      end
-    end
-
-
-    desc "list [IOS_VER]", "Show saved snapshots"
-    def list(ios_ver="*")
-
-      pattern = "#{_find_snapshots_dir}/#{ios_ver}/*"
+      pattern = "#{_find_snapshots_dir}/*"
 
       Dir.glob(pattern).sort.map do |path|
-        snapshot = _get_snapshot(
-          File.basename(File.dirname(path)),
-          File.basename(path),
-          true)
+        snapshot = _get_snapshot(Snapshot.unescape_name(File.basename(path)))
 
-        puts snapshot
+        puts "#{snapshot.name}\t(#{snapshot.find_versions.join(', ')})"
 
       end
     end
 
 
-    desc "save <IOS_VER> <SNAPSHOT_NAME>", "Save specified version's and name snapshot"
-    def save(ios_ver, name)
+    desc "save <NAME>", "Save snapshot with specified snapshot"
+    def save(name)
 
-      simulator = _get_simulator(ios_ver)
-      snapshot = _get_snapshot(ios_ver, name)
+      raise FrascoError.simulator_notfound_error \
+        unless File.exists?(@simulator_dir)
 
-      raise FrascoError.simulator_notfound_error(simulator) \
-        unless simulator.exists?
+      snapshot = _get_snapshot(name)
 
       raise FrascoError.snapshot_exists_error(snapshot) \
         if snapshot.exists?
 
       _mkdir_parents(snapshot.path)
 
-      FileUtils.copy_entry(simulator.path, snapshot.path)
+      FileUtils.copy_entry(@simulator_dir, snapshot.path)
     end
 
 
-    desc "stash <IOS_VER>", "Backup current environment to stash, and destroy environment"
-    def stash(ios_ver)
+    desc "stash", "Backup current environment to stash, and destroy environment"
+    def stash
 
-      simulator = _get_simulator(ios_ver)
-      stash = _get_snapshot(ios_ver, @@STASH_NAME)
+      stash = _get_snapshot(@@STASH_NAME)
 
-      raise FrascoError.simulator_notfound_error(simulator) \
-        unless simulator.exists?
+      raise FrascoError.simulator_notfound_error \
+        unless File.exists?(@simulator_dir)
 
-      raise FrascoError.new("already stashed: ios_ver=#{ios_ver}") \
+      raise FrascoError.new("already stashed") \
         if File.exists?(stash.path)
 
       _mkdir_parents(stash.path)
 
-      FileUtils.move(simulator.path, stash.path)
+      FileUtils.move(@simulator_dir, stash.path)
     end
 
 
-    desc "up <IOS_VER> <NAME>", "Backup current environment to stash, and restore snapshot"
-    def up(ios_ver, name)
+    desc "up <NAME>", "Backup current environment to stash, and restore snapshot"
+    def up(name)
 
-      snapshot = _get_snapshot(ios_ver, name)
+      snapshot = _get_snapshot(name)
 
       raise FrascoError.snapshot_notfound_error(snapshot) \
         unless snapshot.exists?
 
-      stash(ios_ver)
+      stash
 
-      simulator = _get_simulator(ios_ver)
-
-      FileUtils.copy_entry(snapshot.path, simulator.path)
+      FileUtils.copy_entry(snapshot.path, @simulator_dir)
     end
 
 
-    desc "cleanup <IOS_VER>", "Destroy current simulator environment and restore stashed environment"
-    def cleanup(ios_ver)
+    desc "cleanup", "Destroy current simulator environment and restore stashed environment"
+    def cleanup
 
-      snapshot = _get_snapshot(ios_ver, @@STASH_NAME)
+      snapshot = _get_snapshot(@@STASH_NAME)
 
-      raise FrascoError.new("not stashed: ios_ver=#{ios_ver}") \
+      raise FrascoError.new("not stashed") \
         unless snapshot.exists?
 
-      simulator = _get_simulator(ios_ver)
-
       # nothing if not eixsts simulator dir
-      FileUtils.remove_dir(simulator.path) \
-        if simulator.exists?
+      FileUtils.remove_dir(@simulator_dir) \
+        if File.exists?(@simulator_dir)
 
-      FileUtils.move(snapshot.path, simulator.path)
+      FileUtils.move(snapshot.path, @simulator_dir)
 
     end
 
 
-    desc "rename <IOS_VER> <ORG_NAME> <NEW_NAME>", "Change snapshot name"
-    def rename(ios_ver, org_name, new_name)
+    desc "rename <ORG_NAME> <NEW_NAME>", "Change snapshot name"
+    def rename(org_name, new_name)
 
-      org_snapshot = _get_snapshot(ios_ver, org_name)
+      org_snapshot = _get_snapshot(org_name)
 
       raise FrascoError.snapshot_notfound_error(org_snapshot) \
         unless File.exists?(org_snapshot.path)
 
-      new_snapshot = _get_snapshot(ios_ver, new_name)
+      new_snapshot = _get_snapshot(new_name)
 
       raise FrascoError.snapshot_exists_error(new_snapshot) \
         if File.exists?(new_snapshot.path)
@@ -137,10 +122,10 @@ module Frasco
     end
 
 
-    desc "remove <IOS_VER> <NAME>", "Remove snapshot"
-    def remove(ios_ver, name)
+    desc "remove <NAME>", "Remove snapshot"
+    def remove(name)
 
-      snapshot = _get_snapshot(ios_ver, name)
+      snapshot = _get_snapshot(name)
 
       raise FrascoError.snapshot_notfound_error(snapshot) \
         unless snapshot.exists?
@@ -150,14 +135,8 @@ module Frasco
 
 
     private
-    def _get_snapshot(ios_ver, name, escaped=false)
-      Snapshot.new(_find_snapshots_dir, ios_ver, name, escaped)
-    end
-
-
-    private
-    def _get_simulator(ios_ver)
-      Simulator.new(_find_simulators_dir, ios_ver)
+    def _get_snapshot(name)
+      Snapshot.new(_find_snapshots_dir, name)
     end
 
 
@@ -186,11 +165,6 @@ module Frasco
     private
     def _find_snapshots_dir
       _find_snapshots_dir = "#{_find_frasco_dir}/snapshots"
-    end
-
-    private
-    def _find_simulators_dir
-      File.expand_path("~/Library/Application Support/iPhone Simulator");
     end
 
   end

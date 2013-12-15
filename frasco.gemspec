@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = Frasco::VERSION
   spec.authors       = ["mtmta"]
   spec.email         = ["d.masamoto@covelline.com"]
-  spec.description   = %q{iPhone simulator environment management tool}
-  spec.summary       = %q{iPhone simulator environment management tool}
-  spec.homepage      = ""
+  spec.summary       = %q{Test environment manager for iOS simulator.}
+  spec.description   = %q{Test environment manager for iOS simulator.}
+  spec.homepage      = "http://neethouse.org/"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
