@@ -1,0 +1,1 @@
+require "frasco/version"
