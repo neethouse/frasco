@@ -9,12 +9,20 @@ module Frasco
 
     @@STASH_NAME = "__stashed"
 
+    @@QUIT_OPTION = :quit, {
+      :type => :boolean,
+      :aliases => "-q",
+      :desc => "Quit simulator before execute command."
+    }
+
     def initialize(*args)
       super(*args)
 
       @simulator_dir = File.expand_path("~/Library/Application Support/iPhone Simulator");
     end
 
+
+    #######################################
 
     desc "init", "Create '.frasco' directory in current location"
     def init
@@ -26,7 +34,10 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "list", "Show saved snapshots"
+
     def list
 
       pattern = "#{_find_snapshots_dir}/*"
@@ -40,8 +51,15 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "save <NAME>", "Save snapshot with specified snapshot"
+
+    method_option *@@QUIT_OPTION
+
     def save(name)
+
+      _before_bang_command
 
       raise FrascoError.simulator_notfound_error \
         unless File.exists?(@simulator_dir)
@@ -57,8 +75,15 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "stash", "Backup current environment to stash, and destroy environment"
+
+    method_option *@@QUIT_OPTION
+
     def stash
+
+      _before_bang_command
 
       stash = _get_snapshot(@@STASH_NAME)
 
@@ -74,8 +99,15 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "up <NAME>", "Backup current environment to stash, and restore snapshot"
+
+    method_option *@@QUIT_OPTION
+
     def up(name)
+
+      _before_bang_command
 
       snapshot = _get_snapshot(name)
 
@@ -88,8 +120,15 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "cleanup", "Destroy current simulator environment and restore stashed environment"
+
+    method_option *@@QUIT_OPTION
+
     def cleanup
+
+      _before_bang_command
 
       snapshot = _get_snapshot(@@STASH_NAME)
 
@@ -104,6 +143,8 @@ module Frasco
 
     end
 
+
+    #######################################
 
     desc "rename <ORG_NAME> <NEW_NAME>", "Change snapshot name"
     def rename(org_name, new_name)
@@ -122,6 +163,8 @@ module Frasco
     end
 
 
+    #######################################
+
     desc "remove <NAME>", "Remove snapshot"
     def remove(name)
 
@@ -131,6 +174,37 @@ module Frasco
         unless snapshot.exists?
 
       FileUtils.remove_dir(snapshot.path)
+    end
+
+
+    # Raise error if simulator is already running.
+    private
+    def _before_bang_command
+
+      if _is_simulator_running?
+        if options[:quit]
+          _quit_simulator
+        else
+          raise FrascoError.new("Simulator is running. Quit with --quit option.")
+        end
+      end
+    end
+
+
+    private
+    def _quit_simulator
+
+      `killall 'iPhone Simulator'`
+
+      while _is_simulator_running?
+        sleep(0.2)
+      end
+    end
+
+
+    private
+    def _is_simulator_running?
+      !`ps x | grep "[i]Phone Simulator.app"`.empty?
     end
 
 
