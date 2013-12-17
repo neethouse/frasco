@@ -2,18 +2,30 @@ require "Find"
 require "thor"
 require "frasco/error"
 require "frasco/snapshot"
+require "frasco/simulator"
 
 module Frasco
 
+  module PresetMethodOption
+
+    def preset_method_option(*options)
+
+      if options.include?(:quit)
+        method_option :quit,
+          :type => :boolean,
+          :aliases => "-q",
+          :desc => "Quit simulator before execute command."
+      end
+
+    end
+
+  end
+
   class CLI < Thor
 
-    @@STASH_NAME = "__stashed"
+    extend PresetMethodOption
 
-    @@QUIT_OPTION = :quit, {
-      :type => :boolean,
-      :aliases => "-q",
-      :desc => "Quit simulator before execute command."
-    }
+    @@STASH_NAME = "__stashed"
 
     def initialize(*args)
       super(*args)
@@ -55,7 +67,7 @@ module Frasco
 
     desc "save <NAME>", "Save snapshot with specified snapshot"
 
-    method_option *@@QUIT_OPTION
+    preset_method_option :quit
 
     def save(name)
 
@@ -79,7 +91,7 @@ module Frasco
 
     desc "stash", "Backup current environment to stash, and destroy environment"
 
-    method_option *@@QUIT_OPTION
+    preset_method_option :quit
 
     def stash
 
@@ -103,7 +115,7 @@ module Frasco
 
     desc "up <NAME>", "Backup current environment to stash, and restore snapshot"
 
-    method_option *@@QUIT_OPTION
+    preset_method_option :quit
 
     def up(name)
 
@@ -124,7 +136,7 @@ module Frasco
 
     desc "cleanup", "Destroy current simulator environment and restore stashed environment"
 
-    method_option *@@QUIT_OPTION
+    preset_method_option :quit
 
     def cleanup
 
@@ -177,34 +189,28 @@ module Frasco
     end
 
 
+    #######################################
+    
+    desc "simulator [COMMAND]", SimulatorCLI::DESC
+
+    def simulator(*args)
+      Frasco::SimulatorCLI.start(args)
+    end
+
     # Raise error if simulator is already running.
+    # Quit simulator if specified --quit option, and continue.
     private
     def _before_bang_command
 
-      if _is_simulator_running?
+      simulator = Simulator.new
+
+      if simulator.is_running?
         if options[:quit]
-          _quit_simulator
+          simulator.quit
         else
           raise FrascoError.new("Simulator is running. Quit with --quit option.")
         end
       end
-    end
-
-
-    private
-    def _quit_simulator
-
-      `killall 'iPhone Simulator'`
-
-      while _is_simulator_running?
-        sleep(0.2)
-      end
-    end
-
-
-    private
-    def _is_simulator_running?
-      !`ps x | grep "[i]Phone Simulator.app"`.empty?
     end
 
 
