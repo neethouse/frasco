@@ -1,5 +1,6 @@
 require "Find"
 require "thor"
+require "frasco/version"
 require "frasco/error"
 require "frasco/snapshot"
 require "frasco/simulator"
@@ -21,9 +22,12 @@ module Frasco
 
   end
 
+
   class CLI < Thor
 
     extend PresetMethodOption
+
+    package_name :frasco
 
     @@STASH_NAME = "__stashed"
 
@@ -196,6 +200,18 @@ module Frasco
     def simulator(*args)
       Frasco::SimulatorCLI.start(args)
     end
+
+    
+    #######################################
+
+    desc "version", "Show version"
+
+    def version
+      @shell.say("frasco version #{Frasco::VERSION} (c) 2013 neethouse.org")
+    end
+
+
+    #######################################
 
     # Raise error if simulator is already running.
     # Quit simulator if specified --quit option, and continue.
