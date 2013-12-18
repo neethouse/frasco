@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["mtmta"]
   spec.email         = ["d.masamoto@covelline.com"]
   spec.summary       = %q{Test environment manager for iOS simulator.}
-  spec.description   = %q{Test environment manager for iOS simulator.}
+  spec.description   = %q{Create a snapshot of the test environment for iOS simulator.}
   spec.homepage      = "http://neethouse.org/"
   spec.license       = "MIT"
 
