@@ -194,6 +194,52 @@ module Frasco
 
 
     #######################################
+
+    desc "archive <NAME> <ARCHIVE-FILE>", "Archive snapshot of tar.gz"
+
+      method_option :overwrite,
+        :type => :boolean,
+        :aliases => "-f",
+        :desc => "Overwrite exists archive file"
+
+    def archive(name, archive_path)
+
+      snapshot = _get_snapshot(name)
+
+      raise FrascoError.snapshot_notfound_error(snapshot) \
+        unless snapshot.exists?
+
+      raise FrascoError.new("speficied archive file is already exists: #{archive_path}\nOverwrite with -f/--overwrite option.") \
+        if File.exists?(archive_path) && !options["overwrite"]
+
+      archive_path = File.absolute_path(archive_path)
+
+      system("cd '#{snapshot.path}' && tar czf '#{archive_path}' .")
+
+    end
+
+
+    #######################################
+
+    desc "up-archive <ARCHIVE-FILE>", "Backup current environment to stash, and restore archived snapshot"
+
+    preset_method_option :quit
+
+    def up_archive(archive_path)
+
+      _before_bang_command
+
+      raise FrascoError.new("no such file: #{archive_path}") \
+        unless File.exists?(archive_path)
+
+      stash
+
+      system("mkdir '#{@simulator_dir}' && tar xzf '#{archive_path}' -C '#{@simulator_dir}'")
+
+    end
+
+
+    #######################################
     
     desc "simulator [COMMAND]", SimulatorCLI::DESC
 
