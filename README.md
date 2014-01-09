@@ -6,21 +6,19 @@ Test environment manager for iOS simulator.
 
     $ gem install frasco
 
+Execute `setup` subcommand.
+
+    $ frasco setup
+
 ## Create Snapshot of Test Environment 
 
-### 1. Initialize for your project
-
-	$ frasco init
-	
-`init` subcommand create `.frasco` directory in current directory.
-
-### 2. Backup the current iOS simulator environment and clear
+### 1. Backup the current iOS simulator environment and clear
 
 	$ frasco stash
 	
 If iOS simulator is running, execute with `--quit` option.
    
-### 3. Run iOS simulator, and make environment do as you wish
+### 2. Run iOS simulator, and make environment do as you wish
 
     $ frasco simulator run
    
@@ -28,14 +26,15 @@ Example: Register Twitter accounts.
 
 If you need a clean environment, you do not need to do anything.
 
-### 4. Save the snapshot
+### 3. Save the snapshot
 
 	$ frasco save MySnapshot
 	
-### 5. Cleanup and restore 1st step's backup
+### 4. Cleanup and restore 1st step's backup
 
 	$ frasco cleanup --quit
 	
+
 ## Test Using the Snapshot
 
 ### 1. Restore the snapshot
@@ -51,6 +50,27 @@ Test by Xcode or xcodebuild, or manually…
 ### 3. Cleanup and restore 1st step's backup
 
 	$ frasco cleanup --quit
+
+
+## Use Snapshot Archive
+
+### 1. Archive snapshot
+
+    $ frasco archive MySnapshot ArchivedMySnapshot.frasco-snapshot
+
+Created "ArchivedMySnapshot.frasco-snapshot" archive file.
+
+### 2. Restore archived snapshot
+
+    $ frasco up-archive ArchivedMySnapshot.frasco-snapshot
+
+### 3. Test on iOS simulator
+
+Test by Xcode or xcodebuild, or manually…
+
+### 4. Cleanup and restore 2nd step's backup
+
+    $ frasco cleanup --quit
 
 ## Contributing
 

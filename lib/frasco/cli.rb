@@ -40,13 +40,13 @@ module Frasco
 
     #######################################
 
-    desc "init", "Create '.frasco' directory in current location"
-    def init
+    desc "setup", "Create '.frasco' directory in home directory"
+    def setup
 
       raise FrascoError.new("already initialized") \
-        if File.exists?(".frasco")
+        if File.exists?(_default_frasco_dir)
 
-      FileUtils.mkdir(".frasco")
+      FileUtils.mkdir(_default_frasco_dir)
     end
 
 
@@ -290,18 +290,22 @@ module Frasco
     end
 
 
-    # Find .frasco directory from current dir to parent.
+    # Returns $FRASCO_DIR or $HOME/.frasco
+    # Raise an error when .frasco dir is not exists.
     private
     def _find_frasco_dir
 
-      dir = Dir::pwd
+      dir = ENV["FRASCO_DIR"] || _default_frasco_dir
 
-      while !File::exists? frasco_dir = dir + "/.frasco"
-        dir = File::expand_path("..", dir);
-        raise FrascoError.new(".frasco directory not exists\nPlease execute 'frasco init' command.") if dir == "/"
-      end
+      raise FrascoError.new("frasco is not setup\nPlease execute 'frasco setup' command.") \
+        unless File.exists?(dir)
 
-      frasco_dir
+      dir
+    end
+
+    private
+    def _default_frasco_dir
+      "#{Dir::home}/.frasco"
     end
 
     private
