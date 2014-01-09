@@ -16,7 +16,7 @@ Execute `setup` subcommand.
 
 	$ frasco stash
 	
-If iOS simulator is running, execute with `--quit` option.
+If iOS simulator is running, execute with `-f` or `--quit` option.
    
 ### 2. Run iOS simulator, and make environment do as you wish
 
@@ -32,7 +32,7 @@ If you need a clean environment, you do not need to do anything.
 	
 ### 4. Cleanup and restore 1st step's backup
 
-	$ frasco cleanup --quit
+	$ frasco cleanup -f
 	
 
 ## Test Using the Snapshot
@@ -49,7 +49,7 @@ Test by Xcode or xcodebuild, or manually…
 
 ### 3. Cleanup and restore 1st step's backup
 
-	$ frasco cleanup --quit
+	$ frasco cleanup -f
 
 
 ## Use Snapshot Archive
@@ -70,7 +70,7 @@ Test by Xcode or xcodebuild, or manually…
 
 ### 4. Cleanup and restore 2nd step's backup
 
-    $ frasco cleanup --quit
+    $ frasco cleanup -f
 
 ## Contributing
 
