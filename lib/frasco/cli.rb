@@ -14,7 +14,7 @@ module Frasco
       if options.include?(:quit)
         method_option :quit,
           :type => :boolean,
-          :aliases => "-q",
+          :aliases => "-f",
           :desc => "Quit simulator before execute command."
       end
 
@@ -270,7 +270,7 @@ module Frasco
         if options[:quit]
           simulator.quit
         else
-          raise FrascoError.new("Simulator is running. Quit with --quit option.")
+          raise FrascoError.new("Simulator is running. Quit with -f/--quit option.")
         end
       end
     end
