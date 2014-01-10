@@ -313,6 +313,10 @@ module Frasco
       _find_snapshots_dir = "#{_find_frasco_dir}/snapshots"
     end
 
+    def self.exit_on_failure?
+      true
+    end
+
   end
 
 end
